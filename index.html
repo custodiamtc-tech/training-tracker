@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>12-Week Strength Tracker</title>
+<style>
+:root {
+  --blue:#185FA5;--lblue:#E6F1FB;--dblue:#0C447C;
+  --green:#2A5C0E;--lgreen:#EAF3DE;
+  --purple:#3C3489;--lpurple:#EEEDFE;
+  --amber:#7A4500;--lamber:#FDF0DC;
+  --red:#B91C1C;--lred:#FEE2E2;
+  --teal:#0E6B6B;--lteal:#DCF5F5;
+  --gray:#5F5E5A;--lgray:#F5F4F1;--border:#E0DED8;
+  --text:#1a1a1a;--sub:#6b6a66;
+  --r:10px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:#f7f6f3;color:var(--text);font-size:14px;}
+.app{max-width:680px;margin:0 auto;padding:0 0 60px;}
+.nav{background:white;border-bottom:1px solid var(--border);padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-size:16px;font-weight:700;color:var(--blue);}
+.nav-sub{font-size:11px;color:var(--sub);}
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;z-index:100;}
+.tbtn{flex:1;padding:10px 4px 8px;text-align:center;cursor:pointer;font-size:10px;color:var(--sub);border:none;background:none;}
+.tbtn .ti{font-size:20px;display:block;margin-bottom:2px;}
+.tbtn.active{color:var(--blue);}
+.screen{display:none;padding:16px;}
+.screen.active{display:block;}
+.card{background:white;border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.card-hdr{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-hdr h3{font-size:14px;font-weight:700;}
+.card-body{padding:12px 16px;}
+.selector-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.sel-btn{padding:5px 12px;border:1px solid var(--border);border-radius:16px;font-size:12px;cursor:pointer;background:white;color:var(--sub);font-weight:500;}
+.sel-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+.sel-btn.deload{border-style:dashed;}
+.day-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.dpill{padding:7px 12px;border-radius:20px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:white;font-weight:500;color:var(--sub);text-align:center;line-height:1.3;}
+.dpill.active{background:var(--blue);color:white;border-color:var(--blue);}
+.dpill.done{background:var(--lgreen);color:var(--green);border-color:var(--green);}
+.dpill.rest{background:var(--lgray);color:var(--gray);cursor:default;}
+.slabel{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin:14px 0 7px;}
+.section-block{background:white;border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.section-hdr{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.section-hdr .badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.section-hdr .dur{font-size:11px;color:var(--sub);margin-left:auto;}
+.warmup-item{padding:8px 14px;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+.warmup-item:last-child{border-bottom:none;}
+.warmup-name{font-weight:500;}
+.warmup-detail{font-size:11px;color:var(--sub);margin-top:1px;}
+.warmup-dur{font-size:12px;color:var(--teal);font-weight:600;white-space:nowrap;margin-left:8px;}
+.ex-block{padding:10px 14px;border-bottom:1px solid var(--border);}
+.ex-block:last-child{border-bottom:none;}
+.ex-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:3px;}
+.ex-name{font-size:13px;font-weight:700;}
+.ex-target{font-size:11px;color:var(--blue);font-weight:700;white-space:nowrap;margin-left:8px;}
+.ex-note{font-size:11px;color:var(--sub);margin-bottom:7px;line-height:1.4;}
+.ex-home{font-size:10px;color:var(--purple);}
+.rest-tip{font-size:10px;color:var(--gray);font-style:italic;}
+.set-header{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:5px;margin-bottom:3px;}
+.set-header span{font-size:10px;color:var(--sub);text-align:center;font-weight:600;}
+.set-row{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:5px;align-items:center;margin-bottom:4px;}
+.set-label{font-size:11px;color:var(--sub);font-weight:700;text-align:center;}
+.set-input{width:100%;padding:7px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;}
+.set-input:focus{outline:none;border-color:var(--blue);}
+.set-input.logged{background:var(--lgreen);border-color:var(--green);}
+.set-done{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:white;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.set-done.checked{background:var(--lgreen);border-color:var(--green);}
+.cardio-block{padding:12px 14px;}
+.cardio-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between;}
+.cardio-item:last-child{border-bottom:none;}
+.cardio-name{font-weight:500;}
+.cardio-detail{font-size:11px;color:var(--sub);margin-top:1px;}
+.cardio-time{font-size:12px;color:var(--teal);font-weight:600;white-space:nowrap;margin-left:8px;}
+.wod-card{background:var(--lamber);border:1px solid #F5C842;border-radius:var(--r);padding:14px;margin-bottom:12px;}
+.wod-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:3px;}
+.wod-name{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px;}
+.wod-desc{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-line;}
+.wod-note{font-size:11px;color:var(--sub);margin-top:8px;font-style:italic;}
+.wod-log-row{display:flex;gap:8px;margin-top:10px;align-items:center;}
+.wod-input{flex:1;padding:8px 12px;border:1px solid #F5C842;border-radius:6px;font-size:13px;}
+.rest-item{padding:9px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.rest-item:last-child{border-bottom:none;}
+.save-btn{width:100%;padding:13px;background:var(--blue);color:white;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
+.save-btn:active{background:var(--dblue);}
+.complete-banner{background:var(--lgreen);border:1px solid var(--green);border-radius:var(--r);padding:12px 16px;text-align:center;color:var(--green);font-weight:700;margin-bottom:12px;}
+.week-note{background:var(--lblue);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:8px 12px;font-size:12px;color:var(--dblue);margin-bottom:12px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.stat-box{background:white;border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;}
+.stat-num{font-size:28px;font-weight:800;color:var(--blue);}
+.stat-label{font-size:11px;color:var(--sub);margin-top:2px;}
+.prog-bar-wrap{background:var(--lgray);border-radius:4px;height:6px;margin-top:6px;}
+.prog-bar{background:var(--blue);height:6px;border-radius:4px;transition:width .3s;}
+.log-entry{padding:10px 0;border-bottom:1px solid var(--border);}
+.log-entry:last-child{border-bottom:none;}
+.log-hdr{display:flex;justify-content:space-between;margin-bottom:4px;}
+.log-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--lblue);color:var(--dblue);}
+.log-detail{font-size:12px;color:var(--sub);line-height:1.5;}
+.pr-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.pr-row:last-child{border-bottom:none;}
+.pr-val{font-size:12px;padding:2px 8px;border-radius:6px;background:var(--lamber);color:var(--amber);font-weight:700;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--sub);font-size:13px;}
+.danger-btn{padding:8px 16px;background:var(--lred);color:var(--red);border:1px solid var(--red);border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-label{font-size:13px;font-weight:500;}
+.setting-sub{font-size:11px;color:var(--sub);margin-top:2px;}
+.nav-btn{padding:6px 12px;border-radius:16px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:white;color:var(--sub);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="nav">
+    <div>
+      <div class="nav-title">💪 12-Week Tracker</div>
+      <div class="nav-sub" id="nav-sub">Select a session to begin</div>
+    </div>
+  </div>
+
+  <div class="screen active" id="screen-train">
+    <div style="margin-top:4px;">
+      <div class="slabel">Phase</div>
+      <div class="selector-row" id="phase-sel"></div>
+      <div class="slabel">Week</div>
+      <div class="selector-row" id="week-sel"></div>
+      <div class="slabel">Day</div>
+      <div class="day-pills" id="day-pills"></div>
+    </div>
+    <div id="session-area"></div>
+  </div>
+
+  <div class="screen" id="screen-progress">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="stat-sessions">0</div><div class="stat-label">Sessions logged</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-weeks">0</div><div class="stat-label">Weeks completed</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-prs">0</div><div class="stat-label">Lift PRs tracked</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-wods">0</div><div class="stat-label">WODs logged</div></div>
+    </div>
+    <div class="slabel">Programme progress</div>
+    <div class="card" style="margin-bottom:14px;"><div class="card-body">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>12-week programme</span><span id="prog-pct" style="color:var(--blue);font-weight:700;">0%</span></div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
+    </div></div>
+    <div class="slabel">Lift PRs</div>
+    <div class="card" id="pr-card" style="margin-bottom:14px;"><div class="card-body"><div class="empty-state"><div style="font-size:32px">🏆</div>No PRs yet — start logging!</div></div></div>
+    <div class="slabel">Session history</div>
+    <div class="card"><div class="card-body" id="log-list"><div class="empty-state"><div style="font-size:32px">📋</div>No sessions logged yet</div></div></div>
+  </div>
+
+  <div class="screen" id="screen-settings">
+    <div class="card"><div class="card-hdr"><h3>Your profile</h3></div><div class="card-body">
+      <div class="setting-row"><div><div class="setting-label">Body stats</div><div class="setting-sub">172 cm · 74.7 kg · 23% fat · 54.5% muscle · Age 37</div></div></div>
+      <div class="setting-row"><div><div class="setting-label">Goal</div><div class="setting-sub">Upper body muscle + fat loss · mesomorph</div></div></div>
+      <div class="setting-row"><div><div class="setting-label">Shoulder restriction</div><div class="setting-sub">No overhead press · No wide-grip pulling</div></div></div>
+      <div class="setting-row"><div><div class="setting-label">Session length</div><div class="setting-sub">~90 min · afternoon preferred</div></div></div>
+    </div></div>
+    <div class="card"><div class="card-hdr"><h3>Session structure</h3></div><div class="card-body" style="font-size:13px;line-height:1.9;color:var(--sub);">
+      0–10 min: <b style="color:var(--text)">Warm-up</b> (cardio ramp + mobility + activation)<br>
+      10–70 min: <b style="color:var(--text)">Strength block</b> (8 exercises, full rest between sets)<br>
+      70–85 min: <b style="color:var(--text)">WOD or cardio finisher</b><br>
+      85–90 min: <b style="color:var(--text)">Cool-down stretch</b>
+    </div></div>
+    <div class="card"><div class="card-hdr"><h3>Overload rules</h3></div><div class="card-body" style="font-size:13px;line-height:1.8;color:var(--sub);">
+      <b style="color:var(--text)">1.</b> All sets clean → add 2.5 kg upper / 5 kg lower next session.<br>
+      <b style="color:var(--text)">2.</b> Can't add weight → add 1 rep per set first.<br>
+      <b style="color:var(--text)">3.</b> Stuck 2+ weeks → slow eccentric to 3 seconds.<br>
+      <b style="color:var(--text)">4.</b> Every 4th week = deload. Drop loads 40%.<br>
+      <b style="color:var(--text)">5.</b> WODs: beat last week's score by 1 round or 30s.
+    </div></div>
+    <div class="card"><div class="card-hdr"><h3>Rest times</h3></div><div class="card-body" style="font-size:13px;line-height:1.9;color:var(--sub);">
+      Main compound lifts: <b style="color:var(--text)">90–120 s</b><br>
+      Machine / accessory: <b style="color:var(--text)">60–90 s</b><br>
+      Isolation / arms: <b style="color:var(--text)">45–60 s</b><br>
+      Between supersets: <b style="color:var(--text)">60 s</b>
+    </div></div>
+    <div class="card"><div class="card-hdr"><h3>Data</h3></div><div class="card-body">
+      <div class="setting-row"><div><div class="setting-label">Export log</div><div class="setting-sub">Copy all data to clipboard</div></div><button class="nav-btn" onclick="exportData()">Export</button></div>
+      <div class="setting-row"><div><div class="setting-label">Clear all data</div><div class="setting-sub">Permanently delete all sessions</div></div><button class="danger-btn" onclick="clearData()">Reset</button></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="tabbar">
+  <button class="tbtn active" id="tb-train" onclick="showScreen('train')"><span class="ti">🏋️</span>Train</button>
+  <button class="tbtn" id="tb-progress" onclick="showScreen('progress')"><span class="ti">📈</span>Progress</button>
+  <button class="tbtn" id="tb-settings" onclick="showScreen('settings')"><span class="ti">⚙️</span>Info</button>
+</div>
+
+<script>
+const WARMUPS={
+  push:[
+    {name:'Cardio ramp-up',detail:'Bike or rowing erg — easy pace, build heart rate',dur:'5 min'},
+    {name:'Band pull-aparts',detail:'20 reps — opens chest, preps shoulder joint',dur:'1 set'},
+    {name:'Arm circles + cross-body swings',detail:'10 each direction — loosens shoulder capsule',dur:'1 min'},
+    {name:'Slow bodyweight push-up',detail:'2×10 — activate chest and triceps before loading',dur:'2 sets'},
+    {name:'Light cable fly (30% load)',detail:'1×15 — feel the movement pattern before adding weight',dur:'1 set'},
+  ],
+  pull:[
+    {name:'Cardio ramp-up',detail:'Bike or rowing erg — easy pace',dur:'5 min'},
+    {name:'Band pull-aparts',detail:'2×20 — mandatory shoulder prep every pull day',dur:'2 sets'},
+    {name:'Face pull (very light)',detail:'1×20 — external rotation warm-up, wakes up rear delts',dur:'1 set'},
+    {name:'Scapular squeezes',detail:'10 reps, 2s hold each — activate mid-back before rowing',dur:'1 set'},
+    {name:'Light cable row (30% load)',detail:'1×15 — prime the pulling muscles',dur:'1 set'},
+  ],
+  legs:[
+    {name:'Cardio ramp-up',detail:'Bike or rowing erg — moderate pace, legs warm',dur:'5 min'},
+    {name:'Hip circles',detail:'10 each direction, each leg — loosen hip joint',dur:'1 min'},
+    {name:'Glute bridge (bodyweight)',detail:'2×15 — activate glutes before loading',dur:'2 sets'},
+    {name:'Goblet squat (light KB)',detail:'2×10 — rehearse the squat pattern unloaded',dur:'2 sets'},
+    {name:'Leg swings',detail:'10 forward/back + 10 side/side each leg',dur:'1 min'},
+  ],
+  cf:[
+    {name:'Cardio ramp-up',detail:'Bike, row or jump rope — building pace each minute',dur:'5 min'},
+    {name:'Band pull-aparts',detail:'20 reps — always',dur:'1 set'},
+    {name:'Arm circles + trunk rotations',detail:'10 each — full body mobilise',dur:'1 min'},
+    {name:'Slow burpee',detail:'5 reps at easy pace — full body activation',dur:'1 set'},
+    {name:'Jump rope easy singles',detail:'60s — prep rhythm for WOD',dur:'1 min'},
+  ],
+};
+
+const CARDIO={
+  push:{items:[
+    {name:'Rowing erg',detail:'Steady pace, damper 4–5. Arms pull, legs drive.',time:'8 min'},
+    {name:'Speed rope — singles',detail:'30s on / 15s rest × 6 rounds. Find your rhythm.',time:'~7 min'},
+  ]},
+  pull:{items:[
+    {name:'Stationary or assault bike',detail:'Moderate resistance, cadence 70–80 rpm.',time:'8 min'},
+    {name:'Speed rope — singles',detail:'40s on / 20s rest × 5 rounds.',time:'~5 min'},
+    {name:'Band pull-aparts cool-down',detail:'2×20 straight-arm — shoulder cool-down.',time:'2 min'},
+  ]},
+  legs:{items:[
+    {name:'Rowing erg',detail:'Moderate pace. Leg drive on every stroke — great post leg day.',time:'6 min'},
+    {name:'Stationary bike',detail:'Light resistance. Active recovery for the legs.',time:'6 min'},
+    {name:'Speed rope — singles',detail:'30s on / 30s rest × 4 rounds. Easy.',time:'~4 min'},
+  ]},
+  cf:{items:[
+    {name:'Easy bike or row',detail:'Very low intensity. Heart rate below 120 bpm.',time:'8 min'},
+    {name:'Speed rope — slow singles',detail:'2 min easy — keep the skill fresh.',time:'2 min'},
+  ]},
+};
+
+const EX={
+  push:{
+    1:[
+      {name:'Machine chest press (neutral grip)',note:'Handles at mid-chest. Elbows slightly below shoulders — never flare wide.',home:'Home: DB floor press',target:'4×12–15',rest:'90 s'},
+      {name:'Low-incline DB press (30°)',note:'Palms neutral. Max 30° incline. Full ROM — feel the stretch at bottom.',home:'Home: incline DB floor press',target:'4×10–12',rest:'90 s'},
+      {name:'Cable chest fly — low to mid',note:'Anchor at hip height. Arc upward, squeeze at centre. Elbows slightly bent throughout.',home:'Home: band fly',target:'4×15',rest:'60 s'},
+      {name:'Flat DB fly (floor or bench)',note:'Arms wide, slight elbow bend. Stretch the chest fully at bottom.',home:'Home: DB floor fly',target:'3×12',rest:'60 s'},
+      {name:'Incline push-up (or weighted)',note:'Hands on bench for incline angle. Add vest at home for extra load.',home:'Home: floor push-up + vest',target:'3×12–15',rest:'60 s'},
+      {name:'Tricep pushdown — rope',note:'Elbows pinned at sides. Spread rope at full extension. No swinging.',home:'Home: band pushdown',target:'4×15',rest:'60 s'},
+      {name:'Tricep overhead ext. (cable, 1 arm)',note:'Cable anchor behind you — shoulder-safe. Full stretch at top of movement.',home:'Home: band extension',target:'3×12 each',rest:'45 s'},
+      {name:'DB lateral raise',note:'⚠ Pain-free range only. Slow 3-second negative. Stop if shoulder hurts.',home:'Home: band lateral raise',target:'3×15',rest:'45 s'},
+    ],
+    2:[
+      {name:'Machine chest press (neutral grip)',note:'Heavier than phase 1. 2s controlled return on every rep.',home:'',target:'5×10',rest:'90 s'},
+      {name:'Low-incline DB press (30°)',note:'Add weight vs phase 1. Pause 1s at chest before pressing.',home:'Home: incline DB floor press',target:'5×8',rest:'90 s'},
+      {name:'Cable chest fly — low to mid',note:'Heavier. Focus on peak contraction — 1s squeeze at top.',home:'Home: band fly',target:'4×12',rest:'60 s'},
+      {name:'Flat DB fly',note:'Deeper stretch this phase. 3s eccentric (lowering).',home:'Home: DB floor fly',target:'4×12',rest:'60 s'},
+      {name:'Push-up → cable fly superset',note:'Set of push-ups immediately into cable fly. No rest between A and B. Rest 75s after both.',home:'Home: push-up + band fly',target:'4×(10+12)',rest:'75 s after pair'},
+      {name:'Tricep pushdown + drop set',note:'Last set: drop 20% weight, continue to failure immediately.',home:'Home: band pushdown',target:'4×12 + drop',rest:'60 s'},
+      {name:'Tricep overhead ext. (cable, both arms)',note:'Both arms this phase. Full stretch at top.',home:'Home: band ext.',target:'4×12',rest:'45 s'},
+      {name:'DB lateral raise',note:'⚠ Pain-free only. 3s negative this phase. Slightly heavier than phase 1.',home:'Home: band raise',target:'4×15',rest:'45 s'},
+    ],
+    3:[
+      {name:'Machine chest press (neutral grip)',note:'Heavy. Set 4 should be very hard but form holds. Rest fully between sets.',home:'',target:'4×8 → 4×6',rest:'120 s'},
+      {name:'Low-incline DB press',note:'Heavy. Add 1 warm-up set at 50% before working sets.',home:'Home: DB floor press',target:'4×6–8',rest:'120 s'},
+      {name:'Cable chest fly (heavy, 4s eccentric)',note:'Quality over weight. Feel every inch of the movement.',home:'Home: band fly',target:'4×12',rest:'75 s'},
+      {name:'Flat DB fly',note:'Heaviest of the cycle. Full stretch.',home:'Home: DB floor fly',target:'4×10',rest:'60 s'},
+      {name:'Weighted push-up (vest)',note:'Add vest. Go to near-failure on every set.',home:'Home: vest push-up',target:'3×max',rest:'60 s'},
+      {name:'Tricep pushdown SS → overhead ext.',note:'Both tricep moves back to back. 60s rest between each superset.',home:'Home: band both',target:'4×(10+10)',rest:'60 s'},
+      {name:'Close-grip machine press',note:'Narrow grip on the chest press machine. Tricep lockout at top.',home:'Home: close-grip DB floor press',target:'3×12',rest:'60 s'},
+      {name:'DB lateral raise',note:'Heaviest of cycle. ⚠ Pain-free range only.',home:'Home: band raise',target:'4×15',rest:'45 s'},
+    ],
+  },
+  pull:{
+    1:[
+      {name:'Seated cable row (close/neutral grip)',note:'Elbows straight back. Squeeze shoulder blades at end of row. No leaning back.',home:'Home: 30 kg band row',target:'4×12',rest:'90 s'},
+      {name:'Chest-supported machine row',note:'Chest on pad removes lower back fatigue. Neutral grip. Best machine for shoulder safety.',home:'',target:'4×15',rest:'90 s'},
+      {name:'Lat pulldown (close grip ONLY)',note:'⚠ Narrow grip only — never wide. Pull bar to upper chest. Stop immediately if shoulder pain.',home:'Home: band pull-down',target:'4×12',rest:'90 s'},
+      {name:'1-arm DB row (bench supported)',note:'Knee and same-side hand on bench. Row DB to hip. Full stretch at bottom.',home:'Home: dumbbell row',target:'3×12 each',rest:'60 s'},
+      {name:'Cable straight-arm pulldown',note:'Arms straight throughout entire movement. Pure lat isolation. Slight forward hinge.',home:'Home: band straight-arm pulldown',target:'3×15',rest:'60 s'},
+      {name:'Face pull (cable rope, eye height)',note:'⚠ Eye level only — never above head. External rotation at end position. Essential for shoulder health.',home:'Home: 20–30 kg band',target:'4×20',rest:'45 s'},
+      {name:'DB curl (alternating)',note:'No swinging. Supinate (rotate palm up) at top of each rep.',home:'Home: dumbbell',target:'3×12 each',rest:'45 s'},
+      {name:'Hammer curl',note:'Neutral grip throughout. Builds brachialis — adds thickness to upper arm.',home:'Home: dumbbell',target:'3×12',rest:'45 s'},
+    ],
+    2:[
+      {name:'Seated cable row (close grip)',note:'Heavier than phase 1. Pause 1s at full contraction.',home:'Home: 30 kg band',target:'5×10',rest:'90 s'},
+      {name:'Chest-supported machine row',note:'Add weight. Drop set on last set: –20% load, continue immediately.',home:'',target:'4×10 + drop',rest:'90 s'},
+      {name:'Lat pulldown (close grip)',note:'Add weight vs phase 1. Controlled 3s descent.',home:'Home: band pull-down',target:'5×10',rest:'90 s'},
+      {name:'1-arm DB row',note:'Heavier DB. Full range — emphasise the stretch at bottom.',home:'Home: dumbbell row',target:'4×10 each',rest:'60 s'},
+      {name:'Cable straight-arm pulldown',note:'Slightly heavier. Engage lats through the full arc of movement.',home:'Home: band pulldown',target:'4×12',rest:'60 s'},
+      {name:'Face pull (heavier)',note:'Increase load vs phase 1. Same technique — eye height only.',home:'Home: 20–30 kg band',target:'4×20',rest:'45 s'},
+      {name:'Incline DB curl → hammer curl (SS)',note:'Incline position stretches the bicep fully. Immediately into hammer curl.',home:'Home: dumbbell both',target:'4×(10+10)',rest:'60 s'},
+      {name:'Reverse curl (EZ bar or DB)',note:'Pronated (overhand) grip. Targets forearm and brachialis.',home:'Home: band reverse curl',target:'3×12',rest:'45 s'},
+    ],
+    3:[
+      {name:'Seated cable row',note:'Heavy. Work toward 3–5 rep sets in weeks 10–11. Full rest.',home:'Home: 30 kg band',target:'4×8 → 3×5',rest:'120 s'},
+      {name:'Chest-supported machine row',note:'Heaviest of the entire cycle.',home:'',target:'4×8',rest:'120 s'},
+      {name:'Lat pulldown (close grip)',note:'Heavy sets. 4×6.',home:'Home: band pull-down',target:'4×6',rest:'90 s'},
+      {name:'1-arm DB row',note:'Explosive concentric, controlled 3s eccentric. 4×8 each side.',home:'Home: dumbbell row',target:'4×8 each',rest:'75 s'},
+      {name:'Cable straight-arm pulldown',note:'Heavy. Arms stay straight — this is pure lat.',home:'Home: band pulldown',target:'4×10',rest:'60 s'},
+      {name:'Face pull (heaviest of cycle)',note:'Never skip this. Shoulder longevity across entire cycle.',home:'Home: 30 kg band',target:'4×20',rest:'45 s'},
+      {name:'EZ bar / DB curl',note:'Heaviest curl of the cycle. Strict form — no momentum whatsoever.',home:'Home: dumbbell curl',target:'4×8',rest:'60 s'},
+      {name:'Preacher curl (machine or bench)',note:'Full stretch at bottom. Eliminates all cheating.',home:'Home: seated band curl',target:'3×10',rest:'45 s'},
+    ],
+  },
+  legs:{
+    1:[
+      {name:'Leg press (machine)',note:'Feet shoulder-width, mid-platform. Knees to 90° — full range.',home:'Home: goblet squat + vest + band',target:'4×15',rest:'90 s'},
+      {name:'Leg extension (machine)',note:'Full extension at top. 2s hold. Single-leg option available.',home:'',target:'3×15',rest:'60 s'},
+      {name:'Lying leg curl (machine)',note:'Toes pointed slightly down engages hamstring more fully.',home:'',target:'3×15',rest:'60 s'},
+      {name:'Goblet squat (KB)',note:'Hold KB at chest. Deep squat. Use heel wedge if ankle mobility is limited.',home:'Home: 10 kg KB',target:'4×12',rest:'75 s'},
+      {name:'Hip thrust (machine or barbell)',note:'Shoulders on bench. Drive through heels. Squeeze glutes 1s at top.',home:'Home: 30 kg band hip thrust',target:'4×15',rest:'90 s'},
+      {name:'Walking lunge (bodyweight)',note:'Long stride. Knee stops 1 cm from floor. Torso upright throughout.',home:'Home: bodyweight or vest',target:'3×12 each',rest:'60 s'},
+      {name:'Cable crunch',note:'Kneel facing cable stack. Elbows toward knees. Contract abs — not hips.',home:'Home: crunch on mat',target:'3×15',rest:'45 s'},
+      {name:'Plank',note:'Tuck tailbone (posterior tilt). Breathe steadily. No sagging hips.',home:'Home: mat',target:'3×45 s',rest:'45 s'},
+    ],
+    2:[
+      {name:'Leg press',note:'Heavier than phase 1. Pause 1s at bottom — no bouncing.',home:'Home: goblet squat + vest + band',target:'4×12',rest:'90 s'},
+      {name:'Barbell squat (or heavy goblet squat)',note:'Introduce barbell if comfortable. Use goblet squat if form is unsure.',home:'Home: goblet squat + vest + band',target:'4×10',rest:'120 s'},
+      {name:'Leg curl → leg extension (superset)',note:'Both machines back to back. No rest between — rest 75s after both done.',home:'',target:'4×(12+12)',rest:'75 s after pair'},
+      {name:'Romanian deadlift (DB or barbell)',note:'Hip hinge — push hips back. Feel hamstring stretch drive the movement.',home:'Home: single-leg KB RDL',target:'4×10',rest:'90 s'},
+      {name:'Hip thrust (barbell)',note:'Add load vs phase 1.',home:'Home: 30 kg band',target:'4×12',rest:'90 s'},
+      {name:'Walking lunge (DB in hands)',note:'Add load vs phase 1.',home:'Home: vest lunge',target:'3×12 each',rest:'60 s'},
+      {name:'Cable crunch',note:'Add weight vs phase 1.',home:'Home: weighted crunch',target:'3×12',rest:'45 s'},
+      {name:'Ab wheel rollout',note:'From knees. Fully extend — control the return. No hip drop.',home:'Home: plank walk-out',target:'3×10',rest:'45 s'},
+    ],
+    3:[
+      {name:'Barbell back squat',note:'Main lift. Work up to heavy sets of 5. Add warm-up sets.',home:'Home: goblet squat + vest + band',target:'4×8 → 4×5',rest:'120 s'},
+      {name:'Leg press (back-off set)',note:'After squats — extra quad volume at manageable load.',home:'',target:'3×12',rest:'90 s'},
+      {name:'Romanian deadlift (heavy)',note:'Add load each week of this phase.',home:'Home: KB RDL',target:'4×10',rest:'90 s'},
+      {name:'Barbell hip thrust',note:'Heaviest hip thrust of entire 12 weeks.',home:'Home: 30 kg band',target:'4×10',rest:'90 s'},
+      {name:'Leg curl → leg extension (superset)',note:'Both machines. Heaviest loads of cycle.',home:'',target:'4×(10+10)',rest:'75 s after pair'},
+      {name:'Walking lunge (heavy DB)',note:'Heaviest lunge of the cycle.',home:'Home: vest lunge',target:'3×12 each',rest:'60 s'},
+      {name:'Ab wheel rollout',note:'Full extension. Control.',home:'Home: walk-out plank',target:'3×12',rest:'45 s'},
+      {name:'Weighted plank (vest)',note:'Add vest or ask partner to place plate on back. 60s target.',home:'Home: vest plank',target:'3×60 s',rest:'45 s'},
+    ],
+  },
+  cf1:{
+    1:[
+      {name:'Machine chest press (60% load)',note:'Speed-focused. Explosive push. Save energy for WOD.',home:'',target:'3×10',rest:'60 s'},
+      {name:'Low-incline DB press',note:'Moderate. Same — prep the chest.',home:'Home: DB floor press',target:'3×10',rest:'60 s'},
+      {name:'Cable fly (light)',note:'Light pump. Feel the chest.',home:'Home: band fly',target:'3×12',rest:'45 s'},
+    ],
+    2:[
+      {name:'Machine chest press (moderate)',note:'Quick tempo. Not a max effort day.',home:'',target:'3×10',rest:'60 s'},
+      {name:'Cable fly',note:'Moderate.',home:'Home: band fly',target:'3×12',rest:'45 s'},
+      {name:'Incline push-up',note:'Bodyweight. Prep the chest for WOD.',home:'Home: push-up',target:'2×15',rest:'45 s'},
+    ],
+    3:[
+      {name:'Machine chest press (moderate)',note:'WOD is the hard effort today — save something.',home:'',target:'3×8',rest:'60 s'},
+      {name:'Low-incline DB press',note:'Same.',home:'Home: DB floor press',target:'3×8',rest:'60 s'},
+      {name:'Tricep pushdown (light)',note:'Pump set. Elbows warm.',home:'Home: band pushdown',target:'3×15',rest:'45 s'},
+    ],
+  },
+  cf2:{
+    1:[
+      {name:'Seated cable row (moderate)',note:'Moderate load. Quality movement.',home:'Home: band row',target:'3×10',rest:'60 s'},
+      {name:'Lat pulldown — close grip (moderate)',note:'Same.',home:'Home: band pull-down',target:'3×10',rest:'60 s'},
+      {name:'Face pull',note:'Always. Mandatory for shoulder health.',home:'Home: 20–30 kg band',target:'3×20',rest:'45 s'},
+    ],
+    2:[
+      {name:'Chest-supported row (moderate)',note:'Moderate.',home:'',target:'3×10',rest:'60 s'},
+      {name:'Face pull',note:'Mandatory every session.',home:'Home: band',target:'3×20',rest:'45 s'},
+      {name:'Cable straight-arm pulldown (light)',note:'Lat activation. Easy.',home:'Home: band',target:'3×12',rest:'45 s'},
+    ],
+    3:[
+      {name:'Seated cable row (moderate)',note:'Moderate — WOD follows.',home:'Home: band row',target:'3×8',rest:'60 s'},
+      {name:'Face pull',note:'Same.',home:'Home: band',target:'3×20',rest:'45 s'},
+      {name:'1-arm DB row (light)',note:'Warm-down sets. Focus on squeeze.',home:'Home: dumbbell',target:'2×10 each',rest:'45 s'},
+    ],
+  },
+  cf3:{
+    1:[
+      {name:'Goblet squat (KB)',note:'Warm-up for legs before WOD.',home:'Home: 10 kg KB',target:'3×10',rest:'60 s'},
+      {name:'Hip thrust (moderate)',note:'Glute activation pre-WOD.',home:'Home: 30 kg band',target:'3×12',rest:'60 s'},
+      {name:'Romanian deadlift (moderate)',note:'Prep the posterior chain.',home:'Home: KB RDL',target:'3×10',rest:'60 s'},
+    ],
+    2:[
+      {name:'Goblet squat (KB)',note:'Moderate.',home:'Home: KB',target:'3×10',rest:'60 s'},
+      {name:'Romanian deadlift (moderate)',note:'Moderate.',home:'Home: KB RDL',target:'3×10',rest:'60 s'},
+      {name:'Hip thrust (moderate)',note:'Same.',home:'Home: band',target:'3×12',rest:'45 s'},
+    ],
+    3:[
+      {name:'Barbell squat (60% load)',note:'Moderate. Save energy for WOD.',home:'Home: goblet squat',target:'3×8',rest:'75 s'},
+      {name:'Hip thrust (moderate)',note:'Moderate.',home:'Home: band',target:'3×10',rest:'60 s'},
+      {name:'KB swing (10 kg)',note:'Prep for WOD movements. Hip hinge power.',home:'Home: KB',target:'3×12',rest:'45 s'},
+    ],
+  },
+};
+
+const WODS={
+  cf1:{
+    1:{name:'AMRAP 14 — Push & Rope',desc:'As many rounds as possible in 14 min:\n• 10 push-ups\n• 12 KB swings (10 kg)\n• 20 speed rope jumps\n• 10 DB floor press (moderate)\n\nScale push-ups to incline if needed. Keep moving.',note:'Log your rounds. Beat it next week by 1 round.',type:'rounds'},
+    2:{name:'EMOM 16 — Push power',desc:'Every minute on the minute for 16 min:\n• Odd minutes: 10 machine chest press (moderate)\n• Even minutes: 25 speed rope jumps + 8 band pull-aparts\n\nRest is the remainder of each minute.',note:'If finishing with 20s+ spare, increase reps.',type:'rounds'},
+    3:{name:'For time — Push ladder',desc:'21-15-9 reps of:\n• Machine chest press (light–moderate)\n• Push-ups\n• Speed rope (double-unders or ×3 singles)\n\nTime cap: 20 min.',note:'Record your time. Go faster next time.',type:'time'},
+  },
+  cf2:{
+    1:{name:'AMRAP 14 — Pull & Core',desc:'As many rounds as possible in 14 min:\n• 10 seated cable rows (moderate)\n• 10 DB curls (alternating)\n• 20 speed rope jumps\n• 10 sit-ups\n\nQuality pulls throughout.',note:'Log rounds. Beat it next week.',type:'rounds'},
+    2:{name:'EMOM 16 — Row power',desc:'Every minute on the minute for 16 min:\n• Odd: 10 chest-supported rows (moderate)\n• Even: 35s speed rope + 8 face pulls\n\nKeep quality on every rep.',note:'Rest = earned. Keep quality.',type:'rounds'},
+    3:{name:'5 rounds for time — Pull complex',desc:'5 rounds:\n• 12 cable rows (70% of max)\n• 8 DB rows each arm\n• 20 speed rope double-unders (or 60 singles)\n• Rest 60s between rounds\n\nTime cap: 25 min.',note:'Record total time.',type:'time'},
+  },
+  cf3:{
+    1:{name:'⭐ BENCHMARK — AMRAP 15',desc:'As many rounds as possible in 15 min:\n• 10 goblet squats (KB)\n• 10 KB swings\n• 10 push-ups\n• 30s speed rope\n\nThis is your fitness baseline. Repeats in phases 2 and 3.',note:'Record rounds + any partial reps.',type:'rounds'},
+    2:{name:'⭐ BENCHMARK — AMRAP 18',desc:'Repeat phase 1 benchmark exactly:\n• 10 goblet squats (KB)\n• 10 KB swings\n• 10 push-ups\n• 30s speed rope\n\n18 min (3 more than phase 1).',note:'Compare to phase 1 result.',type:'rounds'},
+    3:{name:'⭐ BENCHMARK — AMRAP 20 (final)',desc:'Final test — 20 min:\n• 10 goblet squats (KB + vest if possible)\n• 12 KB swings\n• 12 push-ups\n• 30s speed rope (double-unders if able)\n\nYour 3-month fitness test.',note:'Compare all 3 phases. This is your proof.',type:'rounds'},
+  },
+};
+
+const REST_DAYS={
+  1:['🔵 Band shoulder circuit (10–15 min) — pull-aparts ×20, face pulls ×20, external rotation ×15 each arm. Non-negotiable.',
+     '🟢 Hip mobility (10 min) — 90/90 stretch each side (60 s hold), hip circles, pigeon pose on mat.',
+     '🟡 Optional home circuit (20 min) — 3 rounds: 10 KB swings + 10 goblet squats + 12 band rows + 35s speed rope. Conversational pace.',
+     '⚪ Full body stretch (5 min min) — chest opener, lat stretch, hip flexor, hamstring.'],
+  2:['🔵 Band shoulder circuit (10–15 min) — mandatory. Add 30 kg band if pain-free.',
+     '🟡 Home strength circuit (20 min) — 3 rounds: 10 1-arm DB rows each + 10 DB floor press + 15 KB swings + 40s speed rope. Light load.',
+     '⚪ Foam roller if available (5 min) — thoracic spine, lats, quads.'],
+  3:['🔵 Band shoulder circuit (10 min) — mandatory. Loads are heaviest this phase, shoulder health critical.',
+     '🟡 Active recovery circuit (25 min) — 4 rounds: 10 goblet squats + 10 band rows + 10 push-ups + 45s speed rope. Moderate pace.',
+     '⚪ Full mobility session (10 min) — hip flexors, hamstrings, thoracic rotation on mat.'],
+};
+
+const WEEK_NOTES={
+  1:'Establish working weights. Log every kg — you need this data next week.',
+  2:'Add 1 rep per set OR 2.5 kg upper / 5 kg lower vs last week.',
+  3:'Push the load. Each session should feel slightly harder than last.',
+  4:'⚠ DELOAD — drop all loads 40%. Same movements. Active recovery.',
+  5:'Supersets begin. Max 60s rest between accessory pairs.',
+  6:'Add load vs phase 1. Your body has adapted — trust the process.',
+  7:'Closest to max effort this phase. Push main lifts hard.',
+  8:'⚠ DELOAD — 40% less load. Perfect form on every single rep.',
+  9:'Work toward near-max sets. Take full rest on main lifts.',
+  10:'Heaviest week so far. Attempt a 3-rep max on your main lift.',
+  11:'PR attempts. Push for numbers you have never hit before.',
+  12:'⚠ FINAL DELOAD — consolidate 12 weeks of adaptation.',
+};
+
+const PHASES=[{id:1,label:'Phase 1',weeks:[1,2,3,4]},{id:2,label:'Phase 2',weeks:[5,6,7,8]},{id:3,label:'Phase 3',weeks:[9,10,11,12]}];
+const DAY_DEFS=[
+  {id:'push',label:'Day 1',title:'Chest & Triceps',tag:'push'},
+  {id:'pull',label:'Day 2',title:'Back & Biceps',tag:'pull'},
+  {id:'legs',label:'Day 3',title:'Legs & Core',tag:'legs'},
+  {id:'rest',label:'Day 4',title:'Active Rest',tag:'rest'},
+  {id:'cf1', label:'Day 5',title:'Chest + WOD',tag:'cf'},
+  {id:'cf2', label:'Day 6',title:'Back + WOD',tag:'cf'},
+  {id:'cf3', label:'Day 7',title:'Full Body WOD',tag:'cf'},
+];
+const TAG_COLOR={push:'var(--blue)',pull:'var(--purple)',legs:'var(--green)',cf:'var(--amber)',rest:'var(--gray)'};
+const TAG_BG={push:'var(--lblue)',pull:'var(--lpurple)',legs:'var(--lgreen)',cf:'var(--lamber)',rest:'var(--lgray)'};
+
+let S={phase:1,week:1,day:null,logs:{}};
+function sk(w,id){return'wk'+w+'_'+id;}
+function loadS(){try{const d=localStorage.getItem('trk12v3');if(d)S=JSON.parse(d);}catch(e){}}
+function saveS(){try{localStorage.setItem('trk12v3',JSON.stringify(S));}catch(e){}}
+
+function showScreen(s){
+  ['train','progress','settings'].forEach(id=>{
+    document.getElementById('screen-'+id).classList.toggle('active',id===s);
+    document.getElementById('tb-'+id).classList.toggle('active',id===s);
+  });
+  if(s==='progress')renderProgress();
+}
+
+function renderSelectors(){
+  document.getElementById('phase-sel').innerHTML=PHASES.map(p=>`<button class="sel-btn${S.phase===p.id?' active':''}" onclick="selPhase(${p.id})">${p.label}</button>`).join('');
+  const ph=PHASES.find(p=>p.id===S.phase);
+  document.getElementById('week-sel').innerHTML=ph.weeks.map(w=>{
+    const dl=w%4===0;
+    return`<button class="sel-btn${dl?' deload':''}${S.week===w?' active':''}" onclick="selWeek(${w})">Wk ${w}${dl?' ↓':''}</button>`;
+  }).join('');
+  document.getElementById('day-pills').innerHTML=DAY_DEFS.map((d,i)=>{
+    const done=S.logs[sk(S.week,d.id)]?.complete;
+    const isRest=d.tag==='rest';
+    const cls='dpill'+(isRest?' rest':S.day===i?' active':done?' done':'');
+    return`<button class="${cls}"${isRest?'':' onclick="selDay('+i+')"'}>${d.label}<br><span style="font-size:10px">${d.title}</span></button>`;
+  }).join('');
+  document.getElementById('nav-sub').textContent='Phase '+S.phase+' · Week '+S.week;
+}
+
+function selPhase(p){S.phase=p;S.week=PHASES.find(x=>x.id===p).weeks[0];S.day=null;renderSelectors();document.getElementById('session-area').innerHTML='';}
+function selWeek(w){S.week=w;S.day=null;renderSelectors();document.getElementById('session-area').innerHTML='';}
+function selDay(i){S.day=i;renderSelectors();renderSession();}
+
+function renderSession(){
+  const day=DAY_DEFS[S.day];
+  const ph=S.phase;
+  const wk=S.week;
+  const key=sk(wk,day.id);
+  const log=S.logs[key]||{};
+  const isDeload=wk%4===0;
+  const wuKey=day.tag==='cf'?'cf':day.id==='push'||day.id==='cf1'?'push':day.id==='pull'||day.id==='cf2'?'pull':'legs';
+  const cardioKey=day.tag==='cf'?'cf':day.id;
+
+  let h='';
+  if(log.complete)h+='<div class="complete-banner">✅ Session logged — great work!</div>';
+  h+='<div class="week-note"><b>Week '+wk+':</b> '+WEEK_NOTES[wk]+(isDeload?' — <b>40% less load today</b>':'')+'</div>';
+
+  if(day.tag==='rest'){
+    h+='<div class="section-block"><div class="section-hdr"><span class="badge" style="background:var(--lgray);color:var(--gray)">REST</span><span style="font-size:13px;font-weight:700">Active Rest Day</span><span class="dur">Home only</span></div>';
+    (REST_DAYS[ph]||REST_DAYS[1]).forEach(it=>{h+='<div class="rest-item">'+it+'</div>';});
+    h+='</div>';
+    document.getElementById('session-area').innerHTML=h;
+    return;
+  }
+
+  // WARM UP
+  const wu=WARMUPS[wuKey]||WARMUPS.push;
+  h+='<div class="section-block"><div class="section-hdr"><span class="badge" style="background:var(--lteal);color:var(--teal)">WARM UP</span><span style="font-size:13px;font-weight:700">Warm-up</span><span class="dur">~10 min</span></div>';
+  wu.forEach(w=>{h+='<div class="warmup-item"><div><div class="warmup-name">'+w.name+'</div><div class="warmup-detail">'+w.detail+'</div></div><div class="warmup-dur">'+w.dur+'</div></div>';});
+  h+='</div>';
+
+  // STRENGTH
+  const exList=(EX[day.id]||{})[ph]||[];
+  h+='<div class="section-block"><div class="section-hdr"><span class="badge" style="background:'+TAG_BG[day.tag]+';color:'+TAG_COLOR[day.tag]+'">STRENGTH</span><span style="font-size:13px;font-weight:700">'+day.title+'</span><span class="dur">'+(day.tag==='cf'?'~30 min':'~55–65 min')+'</span></div>';
+  exList.forEach((ex,ei)=>{
+    const savedSets=(log.sets||[])[ei]||[];
+    const tgtStr=typeof ex.target==='function'?ex.target(ph):ex.target;
+    const nMatch=tgtStr.match(/^(\d+)×/);
+    const nSets=nMatch?parseInt(nMatch[1]):4;
+    h+='<div class="ex-block"><div class="ex-top"><div class="ex-name">'+ex.name+'</div><div class="ex-target">'+tgtStr+'</div></div>';
+    h+='<div class="ex-note">'+ex.note+(ex.home?'<br><span class="ex-home">↪ '+ex.home+'</span>':'')+'<br><span class="rest-tip">Rest: '+(ex.rest||'60 s')+'</span></div>';
+    h+='<div class="set-header"><span></span><span>kg / load</span><span>reps done</span><span>✓</span></div>';
+    for(let s=0;s<nSets;s++){
+      const sv=(savedSets[s])||{};
+      h+='<div class="set-row"><div class="set-label">S'+(s+1)+'</div>';
+      h+='<input class="set-input'+(sv.kg?' logged':'')+'" type="number" inputmode="decimal" placeholder="kg" value="'+(sv.kg||'')+'" onchange="saveSet(\''+key+'\','+ei+','+s+',\'kg\',this.value)">';
+      h+='<input class="set-input'+(sv.reps?' logged':'')+'" type="number" inputmode="numeric" placeholder="reps" value="'+(sv.reps||'')+'" onchange="saveSet(\''+key+'\','+ei+','+s+',\'reps\',this.value)">';
+      h+='<button class="set-done'+(sv.done?' checked':'')+'" onclick="toggleDone(\''+key+'\','+ei+','+s+')">'+(sv.done?'✓':'○')+'</button>';
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+
+  // WOD
+  const wod=(WODS[day.id]||{})[ph];
+  if(wod){
+    h+='<div class="wod-card"><div class="wod-label">CrossFit WOD — ~15–20 min</div><div class="wod-name">'+wod.name+'</div><div class="wod-desc">'+wod.desc+'</div><div class="wod-note">'+(wod.note||'')+'</div>';
+    h+='<div class="wod-log-row"><span style="font-size:12px;color:var(--amber);font-weight:600">'+(wod.type==='time'?'Your time:':'Rounds:')+'</span>';
+    h+='<input class="wod-input" type="'+(wod.type==='time'?'text':'number')+'" inputmode="'+(wod.type==='time'?'text':'numeric')+'" placeholder="'+(wod.type==='time'?'e.g. 14:32':'e.g. 8')+'" value="'+(log.wod||'')+'" onchange="saveWOD(\''+key+'\',this.value)"></div></div>';
+  }
+
+  // CARDIO FINISHER
+  const cardio=CARDIO[cardioKey];
+  if(cardio){
+    h+='<div class="section-block"><div class="section-hdr"><span class="badge" style="background:var(--lteal);color:var(--teal)">CARDIO</span><span style="font-size:13px;font-weight:700">Cardio finisher</span><span class="dur">~15 min · if time allows</span></div>';
+    h+='<div class="cardio-block"><p style="font-size:11px;color:var(--sub);margin-bottom:8px;">Only do this if strength work finished on time. Strength always comes first — skip if you ran long.</p>';
+    cardio.items.forEach(c=>{h+='<div class="cardio-item"><div><div class="cardio-name">'+c.name+'</div><div class="cardio-detail">'+c.detail+'</div></div><div class="cardio-time">'+c.time+'</div></div>';});
+    h+='</div></div>';
+  }
+
+  // NOTES + SAVE
+  h+='<div class="section-block"><div class="card-body"><div class="slabel" style="margin-top:0">Session notes</div>';
+  h+='<textarea id="session-note" placeholder="How did it feel? PRs? Pain? Energy level..." style="width:100%;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;" oninput="autosaveNote()">'+(log.note||'')+'</textarea></div></div>';
+  h+='<button class="save-btn" onclick="markComplete(\''+key+'\')">'+(log.complete?'✅ Re-save session':'✅ Mark session complete')+'</button>';
+
+  document.getElementById('session-area').innerHTML=h;
+}
+
+function ensureLog(key){if(!S.logs[key])S.logs[key]={date:new Date().toLocaleDateString(),sets:[],wod:'',note:'',complete:false};}
+function saveSet(key,ei,si,field,val){ensureLog(key);if(!S.logs[key].sets[ei])S.logs[key].sets[ei]=[];if(!S.logs[key].sets[ei][si])S.logs[key].sets[ei][si]={};S.logs[key].sets[ei][si][field]=val;saveS();}
+function toggleDone(key,ei,si){ensureLog(key);if(!S.logs[key].sets[ei])S.logs[key].sets[ei]=[];if(!S.logs[key].sets[ei][si])S.logs[key].sets[ei][si]={};S.logs[key].sets[ei][si].done=!S.logs[key].sets[ei][si].done;saveS();renderSession();}
+function saveWOD(key,val){ensureLog(key);S.logs[key].wod=val;saveS();}
+function autosaveNote(){const key=sk(S.week,DAY_DEFS[S.day].id);ensureLog(key);S.logs[key].note=document.getElementById('session-note').value;saveS();}
+function markComplete(key){ensureLog(key);const n=document.getElementById('session-note');if(n)S.logs[key].note=n.value;S.logs[key].complete=true;S.logs[key].date=new Date().toLocaleDateString();saveS();renderSelectors();renderSession();}
+
+function renderProgress(){
+  const entries=Object.entries(S.logs).filter(([,v])=>v.complete);
+  document.getElementById('stat-sessions').textContent=entries.length;
+  document.getElementById('stat-weeks').textContent=new Set(entries.map(([k])=>k.match(/wk(\d+)/)?.[1])).size;
+  document.getElementById('stat-wods').textContent=entries.filter(([,v])=>v.wod).length;
+  const prMap={};
+  entries.forEach(([k,v])=>{
+    const dayId=k.match(/wk\d+_(.*)/)?.[1];
+    const exList=(EX[dayId]||{})[S.phase]||[];
+    (v.sets||[]).forEach((sa,ei)=>{const nm=exList[ei]?.name;if(!nm)return;(sa||[]).forEach(s=>{if(s?.kg&&parseFloat(s.kg)>0)prMap[nm]=Math.max(prMap[nm]||0,parseFloat(s.kg));});});
+  });
+  const prc=Object.keys(prMap).length;
+  document.getElementById('stat-prs').textContent=prc;
+  const pct=Math.min(100,Math.round((entries.length/72)*100));
+  document.getElementById('prog-bar').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('pr-card').innerHTML=prc?'<div class="card-body">'+Object.entries(prMap).sort((a,b)=>b[1]-a[1]).map(([n,kg])=>'<div class="pr-row"><span>'+n+'</span><span class="pr-val">🏆 '+kg+' kg</span></div>').join('')+'</div>':'<div class="card-body"><div class="empty-state"><div style="font-size:32px">🏆</div>No PRs yet</div></div>';
+  document.getElementById('log-list').innerHTML=entries.length?entries.sort((a,b)=>new Date(b[1].date)-new Date(a[1].date)).slice(0,30).map(([k,v])=>{const dayId=k.match(/wk\d+_(.*)/)?.[1];const wk=k.match(/wk(\d+)/)?.[1];const dd=DAY_DEFS.find(d=>d.id===dayId);return'<div class="log-entry"><div class="log-hdr"><span style="font-size:12px;font-weight:700">'+v.date+'</span><span class="log-badge">Wk '+wk+' · '+(dd?.title||dayId)+'</span></div><div class="log-detail">'+(v.wod?'WOD: '+v.wod+'  ':'')+' '+(v.note||'')+'</div></div>';}).join(''):'<div class="empty-state"><div style="font-size:32px">📋</div>No sessions yet</div>';
+}
+
+function exportData(){const el=document.createElement('textarea');el.value=JSON.stringify(S.logs,null,2);document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);alert('Log copied to clipboard!');}
+function clearData(){if(confirm('Delete ALL logged sessions? Cannot be undone.')){S.logs={};saveS();alert('Data cleared.');renderProgress();}}
+
+loadS();
+renderSelectors();
+</script>
+</body>
+</html>
